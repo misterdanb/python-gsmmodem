@@ -10,6 +10,14 @@ import serial # pyserial: http://pyserial.sourceforge.net
 from .exceptions import TimeoutException
 from . import compat # For Python 2.6 compatibility
 
+PYTHON_VERSION = sys.version_info[0]
+if sys.version_info[0] >= 3:
+    read_from_serial = lambda ser, count: str(ser.read(count), "utf-8")
+    write_to_serial = lambda ser, data: ser.write(bytes(data, "utf-8"))
+else:
+    read_from_serial = lambda ser, count: ser.read(count)
+    write_to_serial = lambda ser, data: ser.write(data)
+
 class SerialComms(object):
     """ Wraps all low-level serial communications (actual read/write operations) """
     
@@ -90,10 +98,7 @@ class SerialComms(object):
             readTermLen = len(readTermSeq)
             rxBuffer = []
             while self.alive:
-                if sys.version_info[0] >= 3:
-                    data = str(self.serial.read(1), "utf-8")
-                else:
-                    data = self.serial.read(1)
+                data = read_from_serial(self.serial, 1)
 
                 if data != '': # check for timeout
                     #print >> sys.stderr, ' RX:', data,'({0})'.format(ord(data))
@@ -129,10 +134,7 @@ class SerialComms(object):
                 self._response = []
                 self._responseEvent = threading.Event()                
 
-                if sys.version_info[0] >= 3:
-                    self.serial.write(bytes(data, "utf-8"))
-                else:
-                    self.serial.write(data)
+                write_to_serial(self.serial, data)
 
                 if self._responseEvent.wait(timeout):
                     self._responseEvent = None
@@ -147,7 +149,4 @@ class SerialComms(object):
                     else:
                         raise TimeoutException()
             else:                
-                if sys.version_info[0] >= 3:
-                    self.serial.write(bytes(data, "utf-8"))
-                else:
-                    self.serial.write(data)
+                write_to_serial(self.serial, data)

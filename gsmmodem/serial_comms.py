@@ -90,7 +90,11 @@ class SerialComms(object):
             readTermLen = len(readTermSeq)
             rxBuffer = []
             while self.alive:
-                data = self.serial.read(1)
+                if sys.version_info[0] >= 3:
+                    data = str(self.serial.read(1), "utf-8")
+                else:
+                    data = self.serial.read(1)
+
                 if data != '': # check for timeout
                     #print >> sys.stderr, ' RX:', data,'({0})'.format(ord(data))
                     rxBuffer.append(data)
@@ -124,7 +128,12 @@ class SerialComms(object):
                     self._expectResponseTermSeq = list(expectedResponseTermSeq) 
                 self._response = []
                 self._responseEvent = threading.Event()                
-                self.serial.write(data)
+
+                if sys.version_info[0] >= 3:
+                    self.serial.write(bytes(data, "utf-8"))
+                else:
+                    self.serial.write(data)
+
                 if self._responseEvent.wait(timeout):
                     self._responseEvent = None
                     self._expectResponseTermSeq = False
@@ -138,4 +147,7 @@ class SerialComms(object):
                     else:
                         raise TimeoutException()
             else:                
-                self.serial.write(data)
+                if sys.version_info[0] >= 3:
+                    self.serial.write(bytes(data, "utf-8"))
+                else:
+                    self.serial.write(data)

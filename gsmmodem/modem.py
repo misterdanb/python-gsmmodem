@@ -410,6 +410,7 @@ class GsmModem(SerialComms):
         :rtype: list
         """
         self.log.debug('write: %s', data)
+
         responseLines = super(GsmModem, self).write(data + writeTerm, waitForResponse=waitForResponse, timeout=timeout, expectedResponseTermSeq=expectedResponseTermSeq)
         if self._writeWait > 0: # Sleep a bit if required (some older modems suffer under load)            
             time.sleep(self._writeWait)
